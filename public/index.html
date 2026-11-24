@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dembi Dolloo Online Exam System</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- pdf.js is used by the admin to import questions from PDF (needs internet the first time) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div class="main-wrapper">
+  <div class="header">
+    <div class="header-content">
+      <h1>Dembi Dolloo Online Exam System</h1>
+      <p>Waajjira Barnoota Magaalaa Dambi Doolloo</p>
+      <p class="sub">Grade 12 National Examination Preparation</p>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="container-center">
+
+      <!-- LOGIN -->
+      <div id="login-section" class="card">
+        <h2 class="center title">Welcome to Online Exam Portal</h2>
+        <div class="row gap20 mb30">
+          <button id="tab-admin" class="btn btn-secondary grow" onclick="switchToAdminLogin()">Admin Login</button>
+          <button id="tab-student" class="btn btn-primary grow" onclick="switchToStudentLogin()">Student Login</button>
+        </div>
+
+        <div id="student-login-form">
+          <div class="form-group"><label>Username</label><input type="text" id="student-username" placeholder="Enter your username"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="student-password" placeholder="Enter your password"></div>
+          <button class="btn btn-primary full" onclick="loginStudent()">Login</button>
+          <p class="center small mt15">Don't have an account? <a href="#" onclick="switchToRegistration(); return false;">Register here</a></p>
+        </div>
+
+        <div id="admin-login-form" class="hidden">
+          <div class="form-group"><label>Admin Password</label><input type="password" id="admin-password" placeholder="Enter admin password"></div>
+          <button class="btn btn-primary full" onclick="loginAdmin()">Login as Admin</button>
+        </div>
+      </div>
+
+      <!-- REGISTRATION -->
+      <div id="registration-section" class="card hidden">
+        <h2 class="center title">Student Registration</h2>
+        <div class="form-group"><label>Full Name</label><input type="text" id="reg-fullname" placeholder="Enter your full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="Enter your email"></div>
+        <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="Choose a username"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Choose a password (min 6 characters)"></div>
+        <div class="form-group">
+          <label>Stream</label>
+          <select id="reg-stream">
+            <option value="">Select your stream</option>
+            <option value="natural-science">Natural Science</option>
+            <option value="social-science">Social Science</option>
+          </select>
+        </div>
+        <div class="row gap10">
+          <button class="btn btn-primary grow" onclick="registerStudent()">Register</button>
+          <button class="btn btn-secondary grow" onclick="switchToLogin()">Back to Login</button>
+        </div>
+      </div>
+
+      <!-- ADMIN DASHBOARD -->
+      <div id="admin-dashboard" class="hidden">
+        <div class="row between mb30">
+          <h2 class="title-left">Admin Dashboard</h2>
+          <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-value" id="total-students">0</div><div class="stat-label">Registered Students</div></div>
+          <div class="stat-card"><div class="stat-value" id="active-exams">0</div><div class="stat-label">Exams In Progress</div></div>
+          <div class="stat-card"><div class="stat-value" id="total-attempts">0</div><div class="stat-label">Completed Attempts</div></div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Import Questions from PDF</h3>
+          <div class="form-group">
+            <label>Subject</label>
+            <select id="subject-select" onchange="onSubjectChange()">
+              <option value="">Select subject</option>
+              <option value="mathematics">Mathematics</option>
+              <option value="english">English</option>
+              <option value="aptitude">Aptitude</option>
+              <option value="custom">Custom Subject</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="custom-subject-group">
+            <label>Custom Subject Name</label>
+            <input type="text" id="custom-subject-name" placeholder="Enter custom subject name">
+          </div>
+          <div class="form-group">
+            <label>Question PDF</label>
+            <input type="file" id="file-upload" accept=".pdf,application/pdf">
+            <p class="hint">Each question: number, 4 options (A–D) and an answer line (e.g. <code>Answer: B</code>) or an answer key at the end. See README for the format.</p>
+          </div>
+          <button class="btn btn-success" id="read-pdf-btn" onclick="readPdf()">Read PDF &amp; Preview</button>
+          <div id="import-preview" class="mt20"></div>
+
+          <h3 class="section-title mt30">Question Banks</h3>
+          <table class="table">
+            <thead><tr><th>Subject</th><th>Questions</th><th>Action</th></tr></thead>
+            <tbody id="banks-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Registered Students &amp; Results</h3>
+          <div class="table-scroll">
+            <table class="table">
+              <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Stream</th><th>Subject</th><th>Score</th><th>Date</th></tr></thead>
+              <tbody id="students-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUDENT DASHBOARD -->
+      <div id="student-dashboard" class="hidden">
+        <div class="row between mb30">
+          <div>
+            <h2 class="title-left">Welcome, <span id="student-name"></span></h2>
+            <p class="muted mt5">Stream: <strong id="student-stream"></strong></p>
+          </div>
+          <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+
+        <div id="exam-start-section" class="card">
+          <h3 class="title-left sm">Available Exams</h3>
+          <p class="muted mb20">Select a subject to begin. You have 2 hours to complete each exam.</p>
+          <div id="exam-buttons" class="exam-grid"></div>
+          <h3 class="section-title mt30">Your Results</h3>
+          <div id="student-results-container"></div>
+        </div>
+
+        <div id="exam-section" class="hidden">
+          <div class="row between mb20">
+            <h3 id="exam-title" class="title-left sm"></h3>
+            <button class="btn btn-secondary" onclick="exitExam()">Exit Exam</button>
+          </div>
+          <div class="timer" id="timer-display">Time Remaining: 02:00:00</div>
+          <div class="question-nav" id="question-navigator"></div>
+          <div id="exam-content" class="mb30"></div>
+          <div class="navigation">
+            <button class="btn btn-secondary nav-btn" onclick="previousQuestion()">&#8592; Previous</button>
+            <button class="btn btn-primary nav-btn" onclick="nextQuestion()">Next &#8594;</button>
+          </div>
+          <button class="btn btn-success full mt15" onclick="submitExam(false)">Submit Exam</button>
+        </div>
+
+        <div id="results-section" class="hidden">
+          <div class="row between mb30">
+            <h2 class="title-left">Exam Results</h2>
+            <button class="btn btn-secondary" onclick="backToDashboard()">Back to Dashboard</button>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value" id="final-score">0%</div><div class="stat-label">Your Score</div></div>
+            <div class="stat-card"><div class="stat-value" id="correct-count">0</div><div class="stat-label">Correct Answers</div></div>
+            <div class="stat-card"><div class="stat-value" id="total-questions">0</div><div class="stat-label">Total Questions</div></div>
+          </div>
+          <div id="results-detail"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="pdf-import.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
